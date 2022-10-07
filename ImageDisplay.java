@@ -26,6 +26,7 @@ public class ImageDisplay {
 			File[] listOfFiles = folder.listFiles();
 			File[] listOfFiles2 = folder2.listFiles();
 
+			// listOfFiles refers to the collection of independent frames in the input folder
 			for (int i = 0; i < listOfFiles.length; i++) {
 				RandomAccessFile raf = new RandomAccessFile(listOfFiles[i], "r");
 				RandomAccessFile raf2 = new RandomAccessFile(listOfFiles2[i], "r");
@@ -48,32 +49,35 @@ public class ImageDisplay {
 						byte g = bytes[ind + height * width];
 						byte b = bytes[ind + height * width * 2];
 
-						byte r2 = bytes2[ind];
-						byte g2 = bytes2[ind + height * width];
-						byte b2 = bytes2[ind + height * width * 2];
-
 						int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-						// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally
-						int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
-
 
 						// Chroma-key
 						if (mode == 1) {
+							byte r2 = bytes2[ind];
+							byte g2 = bytes2[ind + height * width];
+							byte b2 = bytes2[ind + height * width * 2];
+
+							// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally
+							int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
+
 							// RGB to HSV conversion (for easier processing of finding green pixels)
 							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
 							double hue = hsvPixel[0];
+
 							// If the H value falls in the range of green replace RGB value with RGB value of the background video
 							if (90.0 <= hue && hue <= 180) {
 								img.setRGB(x, y, pix2);
 							} else {
 								img.setRGB(x, y, pix);
 							}
+
 						// Subtraction
 						} else if (mode == 0) {
-							// If pixels are the same in the next frame turn it green
+							// If pixel in the current frame is the same as the last, extract it by turning it green
 							if (prevPixel == pix) {
 								img.setRGB(x, y, ((g & 0xff) << 8));
 							} else {
+								// Otherwise, consider that area of pixels to be the foreground and render pixels per usual
 								img.setRGB(x, y, pix);
 							}
 							prevPixel = pix;
@@ -97,7 +101,7 @@ public class ImageDisplay {
 				c.fill = GridBagConstraints.HORIZONTAL;
 				c.gridx = 0;
 				c.gridy = 1;
-				// Add label
+				// Use  set content pane instead of add content pane, so that frames are replaced not joined
 				jframe.setContentPane(lbIm1);
 				jframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

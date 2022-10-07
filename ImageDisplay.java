@@ -73,7 +73,7 @@ public class ImageDisplay {
 
 						// Subtraction
 						} else if (mode == 0) {
-							// If pixel in the current frame is the same as the last, extract it by turning it green
+							// Look at the last frame. If the pixel in the current frame is the same as it, extract it by turning it green
 							if (prevPixel == pix) {
 								img.setRGB(x, y, ((g & 0xff) << 8));
 							} else {

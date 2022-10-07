@@ -53,24 +53,26 @@ public class ImageDisplay {
 						byte b2 = bytes2[ind + height * width * 2];
 
 						int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+						// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally
 						int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
-						// RGB to HSV conversion (for easier processing of finding green pixels)
 
+
+						// Chroma-key
 						if (mode == 1) {
-							double[] hsvPixel = RGBtoHSV(bytes[ind], bytes[ind + height * width], bytes[ind + height * width * 2]);
-							double H_Value = hsvPixel[0];
-
-							img.setRGB(x, y, pix);
-
+							// RGB to HSV conversion (for easier processing of finding green pixels)
+							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
+							double hue = hsvPixel[0];
 							// If the H value falls in the range of green replace RGB value with RGB value of the background video
-							if (310 >= H_Value) {
-								img.setRGB(x, y, pix);
+							if (90.0 <= hue && hue <= 180) {
+								img.setRGB(x, y, pix2);
 							} else {
-								img.setRGB(x, y, pix2);
+								img.setRGB(x, y, pix);
 							}
+						// Subtraction
 						} else if (mode == 0) {
+							// If pixels are the same in the next frame turn it green
 							if (prevPixel == pix) {
-								img.setRGB(x, y, pix2);
+								img.setRGB(x, y, ((g & 0xff) << 8));
 							} else {
 								img.setRGB(x, y, pix);
 							}

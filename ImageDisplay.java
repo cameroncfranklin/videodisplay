@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import javax.swing.*;
+import java.lang.Math;
 
 
 public class ImageDisplay {
@@ -25,6 +26,7 @@ public class ImageDisplay {
 			File folder2 = new File(backgroundFolderPath);
 			File[] listOfFiles = folder.listFiles();
 			File[] listOfFiles2 = folder2.listFiles();
+			BufferedImage copyPreviousFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
 			// listOfFiles refers to the collection of independent frames in the input folder
 			for (int i = 0; i < listOfFiles.length; i++) {
@@ -35,12 +37,11 @@ public class ImageDisplay {
 
 				long len = frameLength;
 				byte[] bytes = new byte[(int) len];
-				byte[] bytes2 = new byte[(int) len];
+				byte[] bytesBackground = new byte[(int) len];
 
 				raf.read(bytes);
-				raf2.read(bytes2);
+				raf2.read(bytesBackground);
 
-				int prevPixel = 0;
 				int ind = 0;
 				for (int y = 0; y < height; y++) {
 					for (int x = 0; x < width; x++) {
@@ -53,12 +54,12 @@ public class ImageDisplay {
 
 						// Chroma-key
 						if (mode == 1) {
-							byte r2 = bytes2[ind];
-							byte g2 = bytes2[ind + height * width];
-							byte b2 = bytes2[ind + height * width * 2];
+							byte r_background = bytesBackground[ind];
+							byte g_background = bytesBackground[ind + height * width];
+							byte b_background = bytesBackground[ind + height * width * 2];
 
 							// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally (convert to unsigned integers)
-							int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
+							int pix2 = 0xff000000 | ((r_background & 0xff) << 16) | ((g_background & 0xff) << 8) | (b_background & 0xff);
 
 							// RGB to HSV conversion (for easier processing of finding green pixels)
 							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
@@ -79,17 +80,18 @@ public class ImageDisplay {
 
 						// Subtraction
 						if (mode == 0) {
-							// Look at the last frame. If the pixel in the current frame is the same as it, extract it by turning it green
-							if (prevPixel == pix) {
-								img.setRGB(x, y, -10445515);
-							} else {
-								// Otherwise, consider that area of pixels to be the foreground and render pixels per usual
+							//If the pixel in the current frame isn't the same as it was in the last frame, render that pixel as foreground
+							if (copyPreviousFrame.getRGB(x,y) != pix) {
 								img.setRGB(x, y, pix);
+
+							} else {
+								// Otherwise, consider that area of pixels to be static background and change it to green
+								img.setRGB(x, y, -10445515);
 							}
-							prevPixel = pix;
 						}
 						ind++;
 					}
+					copyPreviousFrame = img;
 				}
 
 
@@ -116,8 +118,7 @@ public class ImageDisplay {
 				jframe.pack();
 				jframe.setVisible(true);
 				// Sleep enforces fps (24 fps requirement for 20 seconds)
-				Thread.sleep(21);
-
+				Thread.sleep(5);
 			}
 		}
 		catch (FileNotFoundException e) 

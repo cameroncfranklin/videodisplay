@@ -57,25 +57,31 @@ public class ImageDisplay {
 							byte g2 = bytes2[ind + height * width];
 							byte b2 = bytes2[ind + height * width * 2];
 
-							// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally
+							// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally (convert to unsigned integers)
 							int pix2 = 0xff000000 | ((r2 & 0xff) << 16) | ((g2 & 0xff) << 8) | (b2 & 0xff);
 
 							// RGB to HSV conversion (for easier processing of finding green pixels)
 							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
 							double hue = hsvPixel[0];
+							double value = hsvPixel[2];
 
 							// If the H value falls in the range of green replace RGB value with RGB value of the background video
-							if (90.0 <= hue && hue <= 180) {
+							if (52 <= hue && hue <= 180   && value >= 20 && value <= 255) {
 								img.setRGB(x, y, pix2);
+						    // Otherwise, pixel is in the foreground so do not replace it
 							} else {
+								// Detect edge pixel neighborhood (5x5), if any
+
+								// Set values
 								img.setRGB(x, y, pix);
 							}
+						}
 
 						// Subtraction
-						} else if (mode == 0) {
+						if (mode == 0) {
 							// Look at the last frame. If the pixel in the current frame is the same as it, extract it by turning it green
 							if (prevPixel == pix) {
-								img.setRGB(x, y, ((g & 0xff) << 8));
+								img.setRGB(x, y, -10445515);
 							} else {
 								// Otherwise, consider that area of pixels to be the foreground and render pixels per usual
 								img.setRGB(x, y, pix);
@@ -85,6 +91,8 @@ public class ImageDisplay {
 						ind++;
 					}
 				}
+
+
 				// Send img content to frame now that RGB has been processed
 				GridBagLayout gLayout = new GridBagLayout();
 				jframe.getContentPane().setLayout(gLayout);
@@ -108,7 +116,7 @@ public class ImageDisplay {
 				jframe.pack();
 				jframe.setVisible(true);
 				// Sleep enforces fps (24 fps requirement for 20 seconds)
-				Thread.sleep(9);
+				Thread.sleep(21);
 
 			}
 		}
@@ -169,8 +177,8 @@ public class ImageDisplay {
 	public void showIms(String[] args){
 
 		// Read a parameter from command line
-		String param1 = args[1];
-		System.out.println("The second parameter was: " + param1);
+		String param3 = args[2];
+		System.out.println("The mode is: " + param3);
 
 		// Initialize BufferedImage
 		imgOne = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

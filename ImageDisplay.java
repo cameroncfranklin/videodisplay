@@ -22,11 +22,13 @@ public class ImageDisplay {
 		try
 		{
 			int frameLength = width*height*3;
+			int frameCounter = 0;
 			File folder = new File(foregroundFolderPath);
 			File folder2 = new File(backgroundFolderPath);
 			File[] listOfFiles = folder.listFiles();
 			File[] listOfFiles2 = folder2.listFiles();
-			BufferedImage copyPreviousFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			BufferedImage controlFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			BufferedImage prevControlFrame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
 			// listOfFiles refers to the collection of independent frames in the input folder
 			for (int i = 0; i < listOfFiles.length; i++) {
@@ -52,6 +54,8 @@ public class ImageDisplay {
 
 						int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
 
+
+
 						// Chroma-key
 						if (mode == 1) {
 							byte r_background = bytesBackground[ind];
@@ -67,12 +71,10 @@ public class ImageDisplay {
 							double value = hsvPixel[2];
 
 							// If the H value falls in the range of green replace RGB value with RGB value of the background video
-							if (52 <= hue && hue <= 180   && value >= 20 && value <= 255) {
+							if (52 <= hue && hue <= 180 && value >= 20 && value <= 255) {
 								img.setRGB(x, y, pix2);
-						    // Otherwise, pixel is in the foreground so do not replace it
+						    // Otherwise, pixel is in the foreground so do not replace it. Implement logic to detect and handle edge pixels
 							} else {
-								// Detect edge pixel neighborhood (5x5), if any
-
 								// Set values
 								img.setRGB(x, y, pix);
 							}
@@ -80,18 +82,20 @@ public class ImageDisplay {
 
 						// Subtraction
 						if (mode == 0) {
-							//If the pixel in the current frame isn't the same as it was in the last frame, render that pixel as foreground
-							if (copyPreviousFrame.getRGB(x,y) != pix) {
-								img.setRGB(x, y, pix);
+							int pixFromPrevFrame = prevControlFrame.getRGB(x,y);
+							int pixFromControlFrame = controlFrame.getRGB(x,y);
+							int green = -10445515;
 
-							} else {
-								// Otherwise, consider that area of pixels to be static background and change it to green
-								img.setRGB(x, y, -10445515);
+							if (pix == pixFromControlFrame) {
+								img.setRGB(x, y, green);
+								controlFrame.setRGB(x,y,pix);
+							} else if (pix != pixFromControlFrame) {
+								img.setRGB(x,y, pix);
+								controlFrame.setRGB(x,y,pix);
 							}
 						}
 						ind++;
 					}
-					copyPreviousFrame = img;
 				}
 
 
@@ -118,7 +122,7 @@ public class ImageDisplay {
 				jframe.pack();
 				jframe.setVisible(true);
 				// Sleep enforces fps (24 fps requirement for 20 seconds)
-				Thread.sleep(5);
+				Thread.sleep(9);
 			}
 		}
 		catch (FileNotFoundException e) 

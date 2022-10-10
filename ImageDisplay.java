@@ -1,3 +1,4 @@
+/*  Created by Cameron Franklin, based on sample code from Parag Halvadar */
 
 import java.awt.*;
 import java.awt.image.*;
@@ -16,6 +17,10 @@ public class ImageDisplay {
 
 	/** Read Image RGB
 	 *  Reads the image of given width and height at the given imgPath into the provided BufferedImage.
+	 *  For this project we're reading in a collection of RGB image frames an input and rendering it as video using a loop
+	 *  and then resetting the Jframe content on every iteration of the loop to match the next
+	 *  frame in the collection . The outermost for loop controls the frame, while the innermost nested loops control
+	 *  which pixel we're on inside of the frame we're looking at.
 	 */
 	private void readImageRGB(int width, int height, String foregroundFolderPath, String backgroundFolderPath, BufferedImage img, JFrame jframe, int mode)
 	{
@@ -62,6 +67,10 @@ public class ImageDisplay {
 
 						// Chroma-key
 						if (mode == 1) {
+							// F is foreground (known = != green), G is background (known), C is true color (mix of F and G)
+							//int G = -9917890;
+							//int C = pix;
+							//int ratioCG = Math.abs(C/G);
 
 							// RGB to HSV conversion (for easier processing of finding green pixels)
 							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
@@ -128,7 +137,7 @@ public class ImageDisplay {
 				jframe.pack();
 				jframe.setVisible(true);
 				// Sleep enforces fps (24 fps requirement for 20 seconds)
-				Thread.sleep(8);
+				Thread.sleep(17);
 			}
 		}
 		catch (FileNotFoundException e) 

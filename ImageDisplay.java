@@ -82,23 +82,30 @@ public class ImageDisplay {
 
 						// Subtraction
 						if (mode == 0) {
-							int pixFromPrevFrame = prevControlFrame.getRGB(x,y);
-							int pixFromControlFrame = controlFrame.getRGB(x,y);
+							int pixFromPrevControlFrame = prevControlFrame.getRGB(x, y);
+							int pixFromControlFrame = controlFrame.getRGB(x, y);
 							int green = -10445515;
 
-							if (pix == pixFromControlFrame) {
+							if (pix == pixFromControlFrame || pix == pixFromPrevControlFrame) {
 								img.setRGB(x, y, green);
-								controlFrame.setRGB(x,y,pix);
+								controlFrame.setRGB(x, y, pix);
+								if (frameCounter == 2) {
+									prevControlFrame.setRGB(x, y, pix);
+									frameCounter = 0;
+								}
 							} else if (pix != pixFromControlFrame) {
-								img.setRGB(x,y, pix);
-								controlFrame.setRGB(x,y,pix);
+								img.setRGB(x, y, pix);
+								controlFrame.setRGB(x, y, pix);
+								if (frameCounter == 2) {
+									prevControlFrame.setRGB(x, y, pix);
+									frameCounter = 0;
+								}
 							}
 						}
 						ind++;
 					}
 				}
-
-
+				frameCounter += 1;
 				// Send img content to frame now that RGB has been processed
 				GridBagLayout gLayout = new GridBagLayout();
 				jframe.getContentPane().setLayout(gLayout);

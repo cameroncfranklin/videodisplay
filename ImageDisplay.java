@@ -53,17 +53,15 @@ public class ImageDisplay {
 						byte b = bytes[ind + height * width * 2];
 
 						int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+						byte r_background = bytesBackground[ind];
+						byte g_background = bytesBackground[ind + height * width];
+						byte b_background = bytesBackground[ind + height * width * 2];
 
-
+						// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally (convert to unsigned integers)
+						int pix2 = 0xff000000 | ((r_background & 0xff) << 16) | ((g_background & 0xff) << 8) | (b_background & 0xff);
 
 						// Chroma-key
 						if (mode == 1) {
-							byte r_background = bytesBackground[ind];
-							byte g_background = bytesBackground[ind + height * width];
-							byte b_background = bytesBackground[ind + height * width * 2];
-
-							// pix2 is the value of the pixel for the second video, which we'll replace pix with conditionally (convert to unsigned integers)
-							int pix2 = 0xff000000 | ((r_background & 0xff) << 16) | ((g_background & 0xff) << 8) | (b_background & 0xff);
 
 							// RGB to HSV conversion (for easier processing of finding green pixels)
 							double[] hsvPixel = RGBtoHSV(r & 0xff, g & 0xff, b & 0xff);
@@ -88,6 +86,7 @@ public class ImageDisplay {
 
 							if (pix == pixFromControlFrame || pix == pixFromPrevControlFrame) {
 								img.setRGB(x, y, green);
+								img.setRGB(x, y, pix2);
 								controlFrame.setRGB(x, y, pix);
 								if (frameCounter == 2) {
 									prevControlFrame.setRGB(x, y, pix);
@@ -129,7 +128,7 @@ public class ImageDisplay {
 				jframe.pack();
 				jframe.setVisible(true);
 				// Sleep enforces fps (24 fps requirement for 20 seconds)
-				Thread.sleep(9);
+				Thread.sleep(8);
 			}
 		}
 		catch (FileNotFoundException e) 
